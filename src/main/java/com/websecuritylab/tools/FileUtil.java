@@ -40,7 +40,12 @@ public class FileUtil {
 	    }
 	    return fileTree;
 	}
-
+	
+	public static boolean fileFolderExists(String path) {
+		File someFile = new File(path);
+		return someFile.exists();
+	}
+	
 	public static void outputJsonReport(String json, String info) throws IOException {
 		String OUT_JSON = "out/net-doc-jee-report_"+info+".json";
 		

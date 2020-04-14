@@ -15,8 +15,16 @@ public class CliOptions {
     
     public static final String CFR_JAR = "cfr-jar";
     public static final String SOURCE_TYPE = "source-type";
-	public static final String SOURCE_DIR = "source-directory";
-//    public static final String SOURCE_FILE = "source-file";
+    
+    public static final String AUDIT_DIRECTORY = "audit-directory";
+	public static final String AUDIT_DIR_PATH = "audit-dir-path";
+    public static final String AUDIT_FILE = "audit-file";
+ 
+    public static final String SEARCH_TEXT = "search-text";
+    
+    
+	//public static final String SOURCE_DIR = "source-directory";
+    //public static final String SOURCE_FILE = "source-file";
     public static final String APP_NAME = "app-name";
 //    public static final String CLASSPATH = "classpath";
 //    public static final String SUBPACKAGES = "subpackages";
@@ -55,7 +63,7 @@ public class CliOptions {
                 .longOpt(APP_NAME)
                 .desc("Required: Application Name that is appended to the HTML/JSON report names.")
                 .build();         
-        final Option teportJsonOption = Option.builder("r")
+        final Option reportJsonOption = Option.builder("r")
                 .required(false)
                 .hasArg()
                 .longOpt(REPORT_JSON)
@@ -67,6 +75,42 @@ public class CliOptions {
                 .longOpt(CFR_JAR)
                 .desc("CFR Java Decompiler jar file name ( Ex: cfr.jar )")
                 .build();
+        
+        
+        final Option sourceTypeOption = Option.builder("t")
+                .required(false)
+                .hasArg()
+                .longOpt(SOURCE_TYPE)
+                .desc("Required: Type of java files to be scanned ([A]rchive file (WAR/EAR/JAR), [C]LASS files, [S]OURCE files.)")
+                .build();         
+
+        
+        
+        final Option auditDirectoryOption = Option.builder("d")
+                .required(false)
+                .hasArg()
+                .longOpt(AUDIT_DIRECTORY)
+                .desc("Required: Audit all files in a directory? ( [Y]es, [N]o )")
+                .build();         
+        final Option auditDirPathOption = Option.builder("p")
+                .required(false)
+                .hasArg()
+                .longOpt(AUDIT_DIR_PATH)
+                .desc("Required: Path to directory of file(s).")
+                .build();         
+        final Option auditFileOption = Option.builder("f")
+                .required(false)
+                .hasArg()
+                .longOpt(AUDIT_FILE)
+                .desc("Required: Name of the file to be audited.")
+                .build(); 
+        
+        final Option searchTextOption = Option.builder("s")
+                .required(false)
+                .hasArg()
+                .longOpt(AUDIT_FILE)
+                .desc("Required: String(s) to search for in files (separated by | )")
+                .build();         
 
         final Option keeptempOption = Option.builder("k")
                 .required(false)
@@ -91,8 +135,16 @@ public class CliOptions {
         options.addOption(helpOption);
         options.addOption(inputOption);
         options.addOption(propFileOption);
-        options.addOption(teportJsonOption);
+        options.addOption(reportJsonOption);
         options.addOption(cfrJarOption);      
+        options.addOption(sourceTypeOption);
+        
+        options.addOption(auditDirectoryOption);
+        options.addOption(auditDirPathOption);
+        options.addOption(auditFileOption);
+        
+        options.addOption(searchTextOption);
+        
         options.addOption(keeptempOption);
         options.addOption(isLinuxOption);
         options.addOption(verboseOption);
