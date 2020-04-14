@@ -19,6 +19,7 @@ public class CliOptions {
     public static final String AUDIT_DIRECTORY = "audit-directory";
 	public static final String AUDIT_DIR_PATH = "audit-dir-path";
     public static final String AUDIT_FILE = "audit-file";
+	public static final String TEMP_DIR_PATH = "temp-dir-path";
  
     public static final String SEARCH_TEXT = "search-text";
     
@@ -104,6 +105,14 @@ public class CliOptions {
                 .longOpt(AUDIT_FILE)
                 .desc("Required: Name of the file to be audited.")
                 .build(); 
+        final Option tempDirPathOption = Option.builder("z")
+                .required(false)
+                .hasArg()
+                .longOpt(TEMP_DIR_PATH)
+                .desc("Required: Path to temp directory where file(s) were decompiled.")
+                .build();         
+        
+        
         
         final Option searchTextOption = Option.builder("s")
                 .required(false)
@@ -142,7 +151,8 @@ public class CliOptions {
         options.addOption(auditDirectoryOption);
         options.addOption(auditDirPathOption);
         options.addOption(auditFileOption);
-        
+        options.addOption(tempDirPathOption);
+                
         options.addOption(searchTextOption);
         
         options.addOption(keeptempOption);

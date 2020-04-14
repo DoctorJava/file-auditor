@@ -26,6 +26,7 @@ import groovy.json.JsonOutput;
 public class Main {
 	
 	private enum SOURCE_TYPE { A, C, S }		// [A]rchive file (WAR/EAR/JAR), [C]LASS files, [S]OURCE files.
+	private enum AUDIT_DIRECTORY { Y, N, T }		// [A]rchive file (WAR/EAR/JAR), [C]LASS files, [S]OURCE files.
 	
 	public enum FIND_EXT { jar, java, war }
     private static final Logger logger = LoggerFactory.getLogger( Main.class );  
@@ -87,35 +88,38 @@ public class Main {
 
             if (cl.hasOption(CliOptions.INTERACTIVE)) {
             	handlePropInput(buf,CliOptions.AUDIT_DIRECTORY, false);
-            	handlePropInput(buf,CliOptions.SOURCE_TYPE, false);
-                 
-                
-//                if ( props.getProperty(CliOptions.SOURCE_TYPE).toUpperCase().startsWith("J") ) {
-//   				    String appName = handleTextInput(buf,CliOptions.APP_NAME);
-//                	String jsonTxt = handleTextInput(buf,CliOptions.REPORT_JSON);
-//                	FileUtil.outputJsonReport(jsonTxt, appName);   // This is a pretty print version.  The doclet output is not.
-//                	FileUtil.outputHtmlReport(jsonTxt,appName);
-//    				return;
-//                } else 
-                
-                Boolean isDirectory = props.getProperty(CliOptions.AUDIT_DIRECTORY).toUpperCase().startsWith("Y");
-                	
-                if ( isDirectory ) {
-                    handlePropInput(buf,CliOptions.AUDIT_DIR_PATH, true);
-               	    String appName = props.getProperty(CliOptions.AUDIT_DIR_PATH);
-                	int lastSlash = appName.lastIndexOf("/");			// TODO: Handle Windows backslash too?
-                   	if ( lastSlash == appName.length() - 1 ) appName = appName.substring(0,lastSlash);	// Trim last slash 
-                   	lastSlash = appName.lastIndexOf("/");
-                	if ( lastSlash > 0 ) appName = appName.substring(lastSlash+1);
-                	props.setProperty(CliOptions.APP_NAME, appName );              	          	
-                  } else {
-                      handlePropInput(buf,CliOptions.AUDIT_DIR_PATH, true);
-                  	handlePropInput(buf,CliOptions.AUDIT_FILE, false);
-                  	String appName = props.getProperty(CliOptions.AUDIT_FILE);
-                  	int lastDot = appName.lastIndexOf(".");
-                  	if ( lastDot > 0 ) appName = appName.substring(0, lastDot);
-                  	props.setProperty(CliOptions.APP_NAME, appName );
-               }
+            	AUDIT_DIRECTORY auditDirectory = Enum.valueOf(AUDIT_DIRECTORY.class, props.getProperty(CliOptions.AUDIT_DIRECTORY).toUpperCase());
+            	
+            	boolean isDirectory = true;
+             	String appName = null;
+            	switch( auditDirectory )
+    			{
+    				case T:
+                        handlePropInput(buf,CliOptions.TEMP_DIR_PATH, true);
+    					break;
+    				case Y:
+                		handlePropInput(buf,CliOptions.SOURCE_TYPE, false);
+                        handlePropInput(buf,CliOptions.AUDIT_DIR_PATH, true);
+                   	    appName = props.getProperty(CliOptions.AUDIT_DIR_PATH);
+                    	int lastSlash = appName.lastIndexOf("/");			// TODO: Handle Windows backslash too?
+                       	if ( lastSlash == appName.length() - 1 ) appName = appName.substring(0,lastSlash);	// Trim last slash 
+                       	lastSlash = appName.lastIndexOf("/");
+                    	if ( lastSlash > 0 ) appName = appName.substring(lastSlash+1);
+                    	props.setProperty(CliOptions.APP_NAME, appName );              	          	
+    					break;
+    				case N:
+    	            	isDirectory = false;
+                		handlePropInput(buf,CliOptions.SOURCE_TYPE, false);
+                        handlePropInput(buf,CliOptions.AUDIT_DIR_PATH, true);
+                      	handlePropInput(buf,CliOptions.AUDIT_FILE, false);
+                      	appName = props.getProperty(CliOptions.AUDIT_FILE);
+                      	int lastDot = appName.lastIndexOf(".");
+                      	if ( lastDot > 0 ) appName = appName.substring(0, lastDot);
+                      	props.setProperty(CliOptions.APP_NAME, appName );
+    					break;
+    					 
+    			}
+
 
                 handlePropInput(buf,CliOptions.SEARCH_TEXT, false);
                 handlePropInput(buf,CliOptions.APP_NAME, false);
@@ -138,18 +142,18 @@ public class Main {
                 }
                 
                 String searchPath = dirPath;
-        		if ( sourceType == SOURCE_TYPE.A) {
-        			File tempDir = Util.createTempDir(TEMP_DIR);
-        			for (File file: files ) {
-           				System.out.println("Decompiling file: " + file.getAbsolutePath());		
-     					//Util.unzip(file.getAbsolutePath(), tempDir);
-           				
-           				searchPath = runDecompile(file, tempDir, isLinux, isKeepTemp, isVerbose);	
-           			          				
-           				
-           				
-        			}       		
-        		}
+                
+                if ( auditDirectory != AUDIT_DIRECTORY.T ) {
+            		if ( sourceType == SOURCE_TYPE.A ) {
+            			File tempDir = Util.createTempDir(TEMP_DIR);
+            			for (File file: files ) {
+               				System.out.println("Decompiling file: " + file.getAbsolutePath());		
+              				searchPath = runDecompile(file, tempDir, isLinux, isKeepTemp, isVerbose);	
+               				props.setProperty(CliOptions.TEMP_DIR_PATH, searchPath);
+            			}       		
+            		}              	
+                }
+
         		String searchText = props.getProperty(CliOptions.SEARCH_TEXT);
    				System.out.println("Searching file(s) for text: " + searchText);		
    				String outStr = searchRecursiveForString(searchPath, searchText, isLinux, isVerbose);
