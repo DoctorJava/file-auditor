@@ -1,4 +1,4 @@
-package com.websecuritylab.tools;
+package com.websecuritylab.tools.fileauditor;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -10,10 +10,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.websecuritylab.tools.Main.FIND_EXT;
-
-import groovy.json.JsonOutput;
-
+import com.websecuritylab.tools.fileauditor.Main.FIND_EXT;
 
 
 public class FileUtil {
@@ -47,16 +44,17 @@ public class FileUtil {
 	}
 	
 	public static void outputJsonReport(String json, String info) throws IOException {
-		String OUT_JSON = "out/net-doc-jee-report_"+info+".json";
+		String OUT_JSON = "out/file-auditor-report_"+info+".json";
 		
 		try(BufferedWriter writer = new BufferedWriter(new FileWriter(OUT_JSON))){
-		    writer.write(JsonOutput.prettyPrint(json)); 
+		    //writer.write(JsonOutput.prettyPrint(json)); 
+		    writer.write(json); 
 		    System.out.println("Output JSON file: " + OUT_JSON);
 		}
 	}
 	public static void outputHtmlReport(String json, String info) throws IOException {
-		String OUT_HTML_SINGLE = "out/net-doc-jee-report_"+info+".html";
-		String OUT_HTML_ONLY = "out/net-doc-jee-report_"+info+"_only.html";
+		String OUT_HTML_SINGLE = "out/file-auditor-report_"+info+".html";
+		String OUT_HTML_ONLY = "out/file-auditor-report_"+info+"_only.html";
 	
 			
 	//	try(BufferedWriter writer = new BufferedWriter(new FileWriter(OUT_HTML_SINGLE))){
@@ -94,7 +92,7 @@ public class FileUtil {
 	}
 	
 //	public static String convertJsToHtml(String js, boolean isSingleFile) {
-//		final String before = "<!DOCTYPE html><html><title>Net Doc</title> <script type=\"text/javascript\" src=\"js/templates/servlet.js\"></script> <script type=\"text/javascript\" src=\"js/templates/service.js\"></script> <script type=\"text/javascript\" src=\"js/templates/connection.js\"></script> <script type=\"text/javascript\" src=\"js/templates/socket.js\"></script> <link rel=\"stylesheet\" href=\"netdoc.css\">";
+//		final String before = "<!DOCTYPE html><html><title>Net Doc</title> <script type=\"text/javascript\" src=\"js/templates/servlet.js\"></script> <script type=\"text/javascript\" src=\"js/templates/service.js\"></script> <script type=\"text/javascript\" src=\"js/templates/connection.js\"></script> <script type=\"text/javascript\" src=\"js/templates/socket.js\"></script> <link rel=\"stylesheet\" href=\"fileauditor.css\">";
 //		final String after = "<body><h1><center>Net Doc Report</center></h1><div id=\"app\"></div> <script>document.getElementById(\"app\").innerHTML=`<h1>Servlets</h1><ul>${servlets.map(servletTemplate).join(\"\")}</ul><h1>Web Services</h1><ul>${services.map(serviceTemplate).join(\"\")}</ul><h1>Net Connections</h1><ul>${connections.map(connectionTemplate).join(\"\")}</ul><h1>Web Sockets</h1><ul>${sockets.map(socketTemplate).join(\"\")}</ul>`;</script></body>";
 //		return before + "<script>" + js + "</script>" + after;
 //	}
@@ -112,7 +110,7 @@ public class FileUtil {
 		returnStr += "<script type=\"text/javascript\" src=\"js/templates/service.js\"></script>";
 		returnStr += "<script type=\"text/javascript\" src=\"js/templates/connection.js\"></script> ";
 		returnStr += "<script type=\"text/javascript\" src=\"js/templates/socket.js\"></script>";
-		returnStr += "<link rel=\"stylesheet\" href=\"netdoc.css\">";
+		returnStr += "<link rel=\"stylesheet\" href=\"fileauditor.css\">";
 		returnStr += "<script>" + js + "</script>";
 		return returnStr + "</head>";
 	}

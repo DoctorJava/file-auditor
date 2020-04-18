@@ -1,4 +1,4 @@
-package com.websecuritylab.tools;
+package com.websecuritylab.tools.fileauditor;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -100,7 +100,7 @@ public class Util {
         ZipEntry entry = zipIn.getNextEntry();
         // iterates over entries in the zip file
         while (entry != null) {
-            String filePath = destDirectory + File.separator + entry.getName();  	// Error extracting file: C:\Users\scott\AppData\Local\Temp\netdoc\META-INF/MANIFEST.MF
+            String filePath = destDirectory + File.separator + entry.getName();  	// Error extracting file: C:\Users\scott\AppData\Local\Temp\fileauditor\META-INF/MANIFEST.MF
             //String filePath = destDirectory + "/" + entry.getName();
             if (!entry.isDirectory()) {
                 // if the entry is a file, extracts it
@@ -200,7 +200,7 @@ public class Util {
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();
 //        }
-		final File tmp = File.createTempFile("netdocOut", null);
+		final File tmp = File.createTempFile("fileAuditOut", null);
 		try {
 			tmp.deleteOnExit();
 

@@ -1,4 +1,4 @@
-package com.websecuritylab.tools;
+package com.websecuritylab.tools.fileauditor;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
@@ -19,8 +20,13 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-import groovy.json.JsonOutput;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.profesorfalken.jpowershell.PowerShell;
+import com.profesorfalken.jpowershell.PowerShellResponse;
+import com.websecuritylab.tools.fileauditor.model.PowerShellSearchResult;
+import com.websecuritylab.tools.fileauditor.model.Report;
 
 
 public class Main {
@@ -44,20 +50,6 @@ public class Main {
 		logger.info(mainCmd);
 		
 		CommandLine cl = CliOptions.generateCommandLine(args);
-		if (cl.getOptionValue(CliOptions.REPORT_JSON) != null ) {
-			try ( InputStream is = new FileInputStream( cl.getOptionValue(CliOptions.REPORT_JSON) ); )
-			{	
-				String appName = cl.getOptionValue(CliOptions.APP_NAME);
-	            String jsonTxt = IOUtils.toString(is, "UTF-8");
-	            //System.out.println("Got JSON: " + jsonTxt);
-	            FileUtil.outputJsonReport(jsonTxt, appName);   // This is a pretty print version.  The doclet output is not.
-	            FileUtil.outputHtmlReport(jsonTxt,appName);
-			}catch (Exception e) {
-				e.printStackTrace();
-			}
-			return;
-		}
-		System.out.println();
 		String propFile = PROPS_FILE;
 		if (cl.getOptionValue(CliOptions.PROP_FILE) != null ) propFile = cl.getOptionValue(CliOptions.PROP_FILE);
 
@@ -131,9 +123,9 @@ public class Main {
                  
                 Collection<File> files = null;
                 if ( isDirectory ) {
-                    System.out.println("Auditing files in folder ("+props.getProperty(CliOptions.AUDIT_DIRECTORY)+"): " + dirPath);
         			File f = new File(dirPath);
         			files = FileUtil.listFilesByExt(f, FIND_EXT.jar);               	
+                    System.out.println("Auditing " + files.size() + " files in folder: " + dirPath);
                 }
                 else {
                     System.out.println("Auditing single file("+props.getProperty(CliOptions.AUDIT_FILE)+"): " + filePath);
@@ -153,11 +145,22 @@ public class Main {
             			}       		
             		}              	
                 }
+                else {
+                	searchPath = props.getProperty(CliOptions.TEMP_DIR_PATH);
+                }
 
         		String searchText = props.getProperty(CliOptions.SEARCH_TEXT);
    				System.out.println("Searching file(s) for text: " + searchText);		
-   				String outStr = searchRecursiveForString(searchPath, searchText, isLinux, isVerbose);
-        		System.out.println("Got OutStr: " + outStr);
+   				Report report = searchRecursiveForString(searchPath, searchText, isLinux, isVerbose);
+   				
+   				System.out.println("------------------Got Report----------------");
+   				ObjectMapper mapper = new ObjectMapper();
+   				String prettyReport = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(report);
+   				System.out.println(prettyReport);  	
+   				
+   				FileUtil.outputJsonReport(prettyReport, props.getProperty(CliOptions.APP_NAME));
+   				//FileUtil.outputHtmlReport(outStr, props.getProperty(CliOptions.APP_NAME));
+
 
 //    			for (File file: files ) {
 //    				System.out.println("Got file: " + file.getName());		
@@ -221,10 +224,52 @@ public class Main {
 
 	}
 
+	private static Report searchRecursiveForString( String rootPath, String searchText, boolean isLinux, boolean isVerbose) throws IOException {
+	
+		String searchStr = "'rijndael|blowfish'";
+	
+		String cmd = "Get-ChildItem 'C:/Users/scott/AppData/Local/Temp/fileauditor/decompiled/*.java' -Recurse | Select-String -Pattern "+searchStr+" | ConvertTo-Json";
+		
+	//	[ {
+	//	  "IgnoreCase" : true,
+	//	  "LineNumber" : 67,
+	//	  "Line" : "            cipher = new BlowfishEngine();",
+	//	  "Filename" : "BlockCipherSpec.java",
+	//	  "Path" : "C:\\Users\\scott\\AppData\\Local\\Temp\\fileauditor\\decompiled\\org\\cryptacular\\spec\\BlockCipherSpec.java",
+	//	  "Pattern" : "rijndael|blowfish",
+	//	  "Context" : null,
+	//	  "Matches" : [ "Blowfish" ]
+	//	} ]
+				
+		System.out.println ("----------------Running powershell command--------------------");
+		System.out.println (cmd);		
+		System.out.println ("--------------------------------------------------------------");
+		PowerShellResponse response = PowerShell.executeSingleCommand(cmd);
+		
+		Report report = new Report("MyApp");
+		
+		String jsonStr = response.getCommandOutput();
+		
+		ObjectMapper mapper = new ObjectMapper();
+		List<PowerShellSearchResult> psResults;
+		try {
+			psResults = mapper.readValue(jsonStr, new TypeReference<List<PowerShellSearchResult>>(){});
+			
+			for(PowerShellSearchResult r : psResults) {
+				report.addFileMatch(r);
+			}
+						
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return report;
+	}
+	
+	
 	//Get-ChildItem C:/Users/scott/AppData/Local/Temp/fileauditor/decompiled/*.java -Recurse | Select-String -Pattern "parseTrie" | group path | select name
-	
-	
-	private static String searchRecursiveForString( String rootPath, String searchText, boolean isLinux, boolean isVerbose) throws IOException {
+	private static String searchRecursiveForStringOld( String rootPath, String searchText, boolean isLinux, boolean isVerbose) throws IOException {
 		String HR_START = ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>";
 		String HR_END 	= "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<";
 		StringBuffer output = new StringBuffer();
@@ -249,7 +294,7 @@ public class Main {
             System.out.println(cmd);
             System.out.println();       	
         }
-		final File tmp = File.createTempFile("netdocOut", null);
+		final File tmp = File.createTempFile("fileAuditOut", null);
 		try {
 			tmp.deleteOnExit();
 

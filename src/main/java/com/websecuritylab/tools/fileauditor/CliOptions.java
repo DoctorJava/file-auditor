@@ -1,4 +1,4 @@
-package com.websecuritylab.tools;
+package com.websecuritylab.tools.fileauditor;
 import org.apache.commons.cli.*;
 
 import java.io.PrintStream;
@@ -11,7 +11,7 @@ public class CliOptions {
     //public static final String CREATE = "create";
     public static final String INTERACTIVE = "interactive";
     public static final String PROP_FILE = "prop-file";
-    public static final String REPORT_JSON = "report-json";
+    //public static final String REPORT_JSON = "report-json";
     
     public static final String CFR_JAR = "cfr-jar";
     public static final String SOURCE_TYPE = "source-type";
@@ -64,12 +64,6 @@ public class CliOptions {
                 .longOpt(APP_NAME)
                 .desc("Required: Application Name that is appended to the HTML/JSON report names.")
                 .build();         
-        final Option reportJsonOption = Option.builder("r")
-                .required(false)
-                .hasArg()
-                .longOpt(REPORT_JSON)
-                .desc("Load previously generated Net Doc Report JSON file, or paste text with interactive [R]eport mode.  This can be handy if the javadocs with file-auditor-doclet is run from within the IDE.")
-                .build();
         final Option cfrJarOption = Option.builder("j")
                 .required(false)
                 .hasArg()
@@ -144,7 +138,6 @@ public class CliOptions {
         options.addOption(helpOption);
         options.addOption(inputOption);
         options.addOption(propFileOption);
-        options.addOption(reportJsonOption);
         options.addOption(cfrJarOption);      
         options.addOption(sourceTypeOption);
         
